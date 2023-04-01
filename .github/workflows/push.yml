@@ -1,1 +1,32 @@
+name: Push Codeforces Submissions to GitHub
 
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+
+jobs:
+  push-submissions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install cf-tool
+        run: |
+          sudo apt-get update
+          sudo apt-get install python3
+          sudo pip3 install setuptools
+          sudo pip3 install -U cf-tool
+
+      - name: Login to Codeforces
+        env:
+          CF_USERNAME: ${{ secrets.CF_USERNAME }}
+          CF_PASSWORD: ${{ secrets.CF_PASSWORD }}
+        run: cf login
+
+      - name: Push latest submission to GitHub
+        run: |
+          FILE=$(ls -t1 | grep -E '^[0-9]+[a-zA-Z]*$' | head -n 1)
+          git add $FILE
+          git commit -m "Add $FILE"
+          git push
